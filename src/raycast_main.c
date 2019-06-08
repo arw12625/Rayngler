@@ -8,6 +8,7 @@
 
 #include "raycast.h"
 #include "mapGen.h"
+#include "vecMath.h"
 
 void init();
 void render();
@@ -21,8 +22,8 @@ char* filetobuf(const char *file);
 const char vertShaderSource[] = "res/simple2D.vert";
 const char fragShaderSource[] = "res/simple2D.frag";
 
-const int    SCREEN_WIDTH    = 800;
-const int    SCREEN_HEIGHT   = 600;
+const int    SCREEN_WIDTH    = 1024;
+const int    SCREEN_HEIGHT   = 1024;
 const int    IMAGE_WIDTH     = 1024;
 const int    IMAGE_HEIGHT    = 1024;
 const int    CHANNEL_COUNT   = 4;
@@ -126,14 +127,14 @@ int main(void) {
 void init() {
 	//generateGratedWorld(&world, 20,20);
 	generateGratedWorld(&world, 10,10);
-	world->player->x = 5.5;
-	world->player->y = 7.5;
+	world->player->position.x = 5.5;
+	world->player->position.y = 7.5;
 	world->player->height = 1.5;
 	world->gravity = -0.001;
 	settings.screenWidth = IMAGE_HEIGHT;
 	settings.screenHeight = IMAGE_WIDTH;
 	settings.cosXFOV = 0.5;
-	settings.cosYFOV = 0.7;
+	settings.cosYFOV = 0.5;
 	settings.castLimit = 25;
 	
     imageData = calloc(DATA_SIZE, sizeof(GLubyte));	
@@ -288,7 +289,7 @@ void render() {
 void update(double delta) {
 	
 	printf("Delta: %f\n", delta);
-	//printf("Height: %f\n", world->player->z);
+	//printf("Height: %f\n", world->player->position.z);
 	
     /* Poll for and process events */
 	glfwPollEvents();
@@ -301,12 +302,12 @@ void update(double delta) {
 	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
 		camRot--;
 	}
-	float newCamX = cos(camRot * camRotSpeed) * world->player->camX + -sin(camRot * camRotSpeed) * world->player->camY;
-	float newCamY = sin(camRot * camRotSpeed) * world->player->camX + cos(camRot * camRotSpeed) * world->player->camY;
-	world->player->camX = newCamX;
-	world->player->camY = newCamY;
+	float newCamX = cos(camRot * camRotSpeed) * world->player->camDir.x + -sin(camRot * camRotSpeed) * world->player->camDir.y;
+	float newCamY = sin(camRot * camRotSpeed) * world->player->camDir.x + cos(camRot * camRotSpeed) * world->player->camDir.y;
+	world->player->camDir.x = newCamX;
+	world->player->camDir.y = newCamY;
 	
-	//printf("camX: %f, camY: %f\n", world->player->camX, world->player->camY);
+	//printf("camX: %f, camY: %f\n", world->player->camDir.x, world->player->camDir.y);
 	//printf("X: %f, Y: %f\n", world->player->x, world->player->y);
 	
 	
@@ -335,11 +336,11 @@ void update(double delta) {
 		moveSide /= moveMag;
 	}
 	
-	float rotX = world->player->camX;
-	float rotY = world->player->camY;
+	float rotX = world->player->camDir.x;
+	float rotY = world->player->camDir.y;
 	
-	world->player->vx = moveSpeed * (rotX * moveForward - rotY * moveSide);
-	world->player->vy = moveSpeed * (rotY * moveForward + rotX * moveSide);
+	world->player->velocity.x = moveSpeed * (rotX * moveForward - rotY * moveSide);
+	world->player->velocity.y = moveSpeed * (rotY * moveForward + rotX * moveSide);
 	
 	updateWorld(delta, world);
 }

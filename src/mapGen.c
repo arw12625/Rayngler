@@ -6,8 +6,7 @@
  void generateSimpleWorld(RayCastWorld **worldRef, int mapHeight, int mapWidth) {
 	 createWorld(worldRef, mapHeight, mapWidth, 2);
 	 RayCastWorld *world = *worldRef;
-	 world->cellWidth = 1.0;
-	 world->cellHeight = 1.0;
+	 world->cellSize = 1.0;
 	 
 	for(int i = 0; i < mapHeight; i++) {
 		for(int j = 0; j < mapWidth; j++) {
@@ -58,12 +57,11 @@
 void generateGratedWorld(RayCastWorld **worldRef, int mapHeight, int mapWidth) {
 	 createWorld(worldRef, mapHeight, mapWidth, mapHeight-1);
 	 RayCastWorld *world = *worldRef;
-	 world->cellWidth = 1.0;
-	 world->cellHeight = 1.0;
+	 world->cellSize = 2.0;
 	
 	CellType *borderType = &(world->types[0]);
 		borderType->ceilColor = 0;
-		borderType->bottomWallColor = 153;
+		borderType->bottomWallColor = 112553;
 		borderType->topWallColor = 0;
 		borderType->floorColor = 0;
 		borderType->isTranslucent = 0;
@@ -88,7 +86,7 @@ void generateGratedWorld(RayCastWorld **worldRef, int mapHeight, int mapWidth) {
 	 
 	for(int i = 1; i < mapHeight - 1; i++) {
 		for(int j = 1; j < mapWidth - 1; j++) {
-			world->map[i][j] = i > j ? i : j;
+			world->map[i][j] = i;//i > j ? i : j;
 		}
 	}
 	

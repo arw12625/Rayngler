@@ -8,7 +8,7 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/includes")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries")
 
-add_executable(Raycaster src/raycast_main.c ${SRC_DIR}/raycast.c ${INC_DIR}/raycast.h ${SRC_DIR}/mapGen.c ${INC_DIR}/mapGen.h)
+add_executable(Raycaster src/raycast_main.c ${SRC_DIR}/raycast.c ${INC_DIR}/raycast.h ${SRC_DIR}/mapGen.c ${INC_DIR}/mapGen.h ${SRC_DIR}/vecMath.c ${INC_DIR}/vecMath.h)
 
 target_include_directories(Raycaster PRIVATE ${INC_DIR})
 
@@ -22,8 +22,4 @@ target_link_libraries(Raycaster PRIVATE glfw)
 
 add_subdirectory(${LIB_DIR}/glad ${LIB_DIR}/glad)
 target_link_libraries(Raycaster PRIVATE glad)
-
-#find_package(OpenGL REQUIRED)
-#target_include_directories(Raycaster PUBLIC ${OPENGL_INCLUDE_DIR})
-#target_link_libraries(Raycaster ${OPENGL_gl_LIBRARY})
 
