@@ -9,71 +9,34 @@
 #include "raycast.h"
 #include "mapGen.h"
 #include "vecMath.h"
+#include "double_pbo_texture.h"
+#include "graphics_2d.h"
 
 void init();
 void render();
 void terminate();
 void update(double delta);
-void updatePixels(GLubyte* dst, int size);
+void updatePixels(GLubyte* dst, int size, GLenum format);
 void glInit();
-void loadShaderProgram();
 char* filetobuf(const char *file);
 
 const char vertShaderSource[] = "res/simple2D.vert";
 const char fragShaderSource[] = "res/simple2D.frag";
 
 const int    SCREEN_WIDTH    = 1024;
-const int    SCREEN_HEIGHT   = 1024;
+const int    SCREEN_HEIGHT   = 768;
 const int    IMAGE_WIDTH     = 1024;
 const int    IMAGE_HEIGHT    = 1024;
-const int    CHANNEL_COUNT   = 4;
-const int    DATA_SIZE       = IMAGE_WIDTH * IMAGE_HEIGHT * CHANNEL_COUNT;
-const GLenum PIXEL_FORMAT    = GL_RGBA;
 
 GLFWwindow* window;
-
-GLuint vertexshader, fragmentshader;
-GLuint shaderprogram;
-
-GLuint pboIDs[2];
-GLuint textureID;
-GLubyte *imageData = 0;
-GLuint vertBufferID;
-GLuint texCoordBufferID;
-GLuint elementID;
-GLuint vaoID;
-
-const GLuint vertAttr = 0;
-const GLuint texCoordAttr = 1;
-const GLuint texNum = 0;
-GLuint pmLoc = 0;
 
 
 RayCastWorld *world;
 RayCastSettings settings;
 
+DoublePBO *dpbo;
 
-static const GLfloat vertData[] = {
-    -1.0f,  1.0f,
-    -1.0f, -1.0f,
-     1.0f, -1.0f,
-     1.0f,  1.0f
-};
-static const GLfloat texCoordData[] = { 
-    0,0,
-	1,0,
-	1,1,
-	0,1
-};
-static const GLuint elementData[] = {
-    0,1,2,3
-};
-const GLfloat pm[] = {
-    1.0f , 0.0f , 0.0f , 0.0f,
-    0.0f, 1.0f, 0.0f , 0.0f,
-    0.0f, 0.0f, 0, 0,
-    0.0f, 0.0f, 0.0f, 1.0f
-};
+Graphics2D *g2D;
 
 int main(void) {
 
@@ -82,7 +45,7 @@ int main(void) {
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -130,6 +93,7 @@ void init() {
 	world->player->position.x = 5.5;
 	world->player->position.y = 7.5;
 	world->player->height = 1.5;
+	world->player->stepHeight = 0.35;
 	world->gravity = -0.001;
 	settings.screenWidth = IMAGE_HEIGHT;
 	settings.screenHeight = IMAGE_WIDTH;
@@ -137,149 +101,40 @@ void init() {
 	settings.cosYFOV = 0.5;
 	settings.castLimit = 25;
 	
-    imageData = calloc(DATA_SIZE, sizeof(GLubyte));	
-	
+    
 	//printf("GLINIT\n");
 	glInit();
+	GLchar *vertexsource, *fragmentsource;
+	vertexsource = filetobuf(vertShaderSource);
+    fragmentsource = filetobuf(fragShaderSource);
+	initGraphics2D(&g2D, SCREEN_WIDTH, SCREEN_HEIGHT, 0, vertexsource, fragmentsource);
 	
-	free(imageData);
+	initDoublePBO(&dpbo, IMAGE_HEIGHT, IMAGE_WIDTH);
+	
+	g2D->textureID = dpbo->textureID;
+	
 }
 
 void glInit() {
-	
-	glActiveTexture(GL_TEXTURE0);
 	
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_CULL_FACE);
 	
-	loadShaderProgram();
-	
-	glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	//might need to swap height and width
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, IMAGE_HEIGHT, IMAGE_WIDTH, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-    glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glGenBuffers(2, pboIDs);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIDs[0]);
-    glBufferData(GL_PIXEL_UNPACK_BUFFER, DATA_SIZE, 0, GL_STREAM_DRAW);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIDs[1]);
-    glBufferData(GL_PIXEL_UNPACK_BUFFER, DATA_SIZE, 0, GL_STREAM_DRAW);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-	
-	
-	glGenVertexArrays(1, &vaoID);
-	glBindVertexArray(vaoID);
-	
-	glGenBuffers(1,&vertBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, vertBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertData), vertData, GL_STATIC_DRAW);
-	glVertexAttribPointer(vertAttr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(vertAttr);
-	
-	glGenBuffers(1,&texCoordBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, texCoordBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoordData), texCoordData, GL_STATIC_DRAW);
-	glVertexAttribPointer(texCoordAttr, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(texCoordAttr);
-	
-	glGenBuffers(1, &elementID);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elementData), elementData, GL_STATIC_DRAW);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
 	
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	
 }
 
-void loadShaderProgram() {
-	
-	GLchar *vertexsource, *fragmentsource;
-
-	vertexsource = filetobuf(vertShaderSource);
-    fragmentsource = filetobuf(fragShaderSource);
-	
-	vertexshader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexshader, 1, (const GLchar**)&vertexsource, 0);
-	glCompileShader(vertexshader);
-	GLint success = 0;
-	glGetShaderiv(vertexshader, GL_COMPILE_STATUS, &success);
-	if(success == GL_FALSE) {
-		printf("Vertex Shader did not compile correctly\n");
-	}
-	
-	fragmentshader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentshader, 1, (const GLchar**)&fragmentsource, 0);
-	glCompileShader(fragmentshader);
-	glGetShaderiv(fragmentshader, GL_COMPILE_STATUS, &success);
-	if(success == GL_FALSE) {
-		printf("Fragment Shader did not compile correctly\n");
-	}
-	
-    free(vertexsource);
-    free(fragmentsource);
-	
-	shaderprogram = glCreateProgram();
-	glAttachShader(shaderprogram, vertexshader);
-    glAttachShader(shaderprogram, fragmentshader);
-	
-	glBindAttribLocation(shaderprogram, vertAttr, "vert");
-    glBindAttribLocation(shaderprogram, texCoordAttr, "texCoordIn");
-	
-	glLinkProgram(shaderprogram);
-	
-	glGetProgramiv(shaderprogram, GL_LINK_STATUS, &success);
-	if(success == GL_FALSE) {
-		printf("Shader did not link correctly\n");
-	}
-	
-	glUseProgram(shaderprogram);
-	
-	pmLoc = glGetUniformLocation(shaderprogram, "pm");
-	glUniformMatrix4fv(pmLoc, 1, GL_FALSE, pm);
-	
-	glUniform1i(glGetUniformLocation(shaderprogram, "tex"), texNum);
-}
 
 void render() {
 	/* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
 	
-	static int pboFrame = 0;
-	pboFrame = 1 - pboFrame;
-	int pboNextFrame = 1 - pboFrame;
+	updateDoublePBO(dpbo, GL_TEXTURE0, &updatePixels); 
 	
-
-	glBindTexture(GL_TEXTURE_2D, textureID);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIDs[pboFrame]);	
-	//might need to swap image height and width
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, IMAGE_HEIGHT, IMAGE_WIDTH, PIXEL_FORMAT, GL_UNSIGNED_BYTE, 0);
-	
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pboIDs[pboNextFrame]);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER, DATA_SIZE, 0, GL_STREAM_DRAW);
-    GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
-	if(ptr) {
-        // update data directly on the mapped buffer
-        updatePixels(ptr, DATA_SIZE);
-        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);  // release pointer to mapping buffer
-    }
-	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-
-	
-	glUseProgram(shaderprogram);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-	//glBindVertexArray(vaoID);
-	
-	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, 0);
-	
+	renderGraphics2D(g2D);
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
@@ -343,14 +198,19 @@ void update(double delta) {
 	world->player->velocity.y = moveSpeed * (rotY * moveForward + rotX * moveSide);
 	
 	updateWorld(delta, world);
+	
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
 }
 
 void terminate(int delta) {
-    glDeleteVertexArrays(1, &vaoID);
+	destroyDoublePBO(dpbo);
+	destroyGraphics2D(g2D);
 	destroyWorld(world);
 }
 
-void updatePixels(GLubyte* dst, int size) {
+void updatePixels(GLubyte* dst, int size, GLenum format) {
     //static int color = 125215;
 
     if(!dst) {

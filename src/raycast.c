@@ -63,7 +63,8 @@ void updateWorld(float delta, RayCastWorld *world) {
 	float newY = player->position.y + player->velocity.y * delta;
 	float newZ = player->position.z + (player->velocity.z + world->gravity) * delta;
 	
-	if(!getCellType(world, newX,newY).isWall) {
+	CellType potType = getCellType(world, newX,newY);
+	if(!potType.isWall && potType.floorZ < player->position.z - player->height + player->stepHeight) {
 		player->position.x = newX;
 		player->position.y = newY;
 	}

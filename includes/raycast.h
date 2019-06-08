@@ -21,6 +21,7 @@ typedef struct Player {
 	Vec3 position;
 	Vec3 velocity;
 	Vec3 camDir;
+	float stepHeight;
 	float height;
 } Player;
 
