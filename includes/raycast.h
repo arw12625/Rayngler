@@ -21,6 +21,8 @@ typedef struct Player {
 	Vec3 position;
 	Vec3 velocity;
 	Vec3 camDir;
+    float heading;
+    float pitch;
 	float stepHeight;
 	float height;
 } Player;
@@ -49,8 +51,10 @@ void createWorld(RayCastWorld **worldRef, int mapHeight, int mapWidth, int numTy
 void destroyWorld(RayCastWorld *world);
 
 void updateWorld(float delta, RayCastWorld *world);
+
+void* mallocRaycastMemory(RayCastSettings *settings);
 	
-void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings);
+void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings, void* memory);
 
 CellType getCellType(RayCastWorld *world, float x, float y);
 #endif

@@ -19,6 +19,8 @@ void createPlayer(Player **playerRef) {
 	player->camDir.x = 0;
 	player->camDir.y = 1;
 	player->camDir.z = 0;
+    player->heading = 0;
+    player->pitch = 0;
 	
 }
 
@@ -142,7 +144,7 @@ void renderHistory(RayCastProjectionData *projData, int *slice, RayCastSettings 
 
 #define TO_SCREEN_ROW(coord, h) ((int)((-fmin(fmax(coord,-1),1) + 1) * h / 2))
 
-void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings) {
+void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings, void* memory) {
 	
 	// Clear data to black. Not necessary once screen is entirely redrawn each frame
 	
@@ -160,7 +162,8 @@ void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings) {
 	// Vertical slice of the image to be rendered
 	int *slice;
 	
-	RayCastCell *history = malloc(sizeof(RayCastCell) * settings->castLimit);
+    RayCastCell *history = (RayCastCell*)memory;
+	//RayCastCell *history = malloc(sizeof(RayCastCell) * settings->castLimit);
 	
 	// Iterate over all vertical slices of the screen
 	for(int screenColumn = 0; screenColumn < settings->screenWidth; screenColumn++) {
@@ -198,8 +201,12 @@ void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings) {
 		
 	}
 	
-	free(history);
+	//free(history);
 	
+}
+
+void* mallocRaycastMemory(RayCastSettings *settings) {
+	return malloc(sizeof(RayCastCell) * settings->castLimit);
 }
 
 Camera initCamera(Player *player, RayCastSettings *settings) {

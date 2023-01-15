@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_2D_H
 #define GRAPHICS_2D_H
 
-#include <glad/glad.h>
+#include "opengl.h"
 #include <GLFW/glfw3.h>
 
 typedef struct Graphics2D {
@@ -27,10 +27,11 @@ typedef struct Graphics2D {
 } Graphics2D;
 
 
-void initGraphics2D(Graphics2D ** g2DRef, int screenWidth, int screenHeight, int rotated, GLchar *vertexsource, GLchar *fragmentsource);
+void initGraphics2D(Graphics2D ** g2DRef, int screenWidth, int screenHeight, int rotated, const GLchar *vertexsource, const GLchar *fragmentsource);
 
 void renderGraphics2D(Graphics2D *g2D);
 
 void destroyGraphics2D(Graphics2D *g2D);
 
+void activateTextureUnit(Graphics2D *g2D);
 #endif
