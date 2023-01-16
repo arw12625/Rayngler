@@ -1,7 +1,8 @@
-
-
 #include "mapGen.h"
 
+// Not sure why we need to reverse byte order...
+#define COLOR(num) ( ((num & 0xFF000000) >> 24) | ((num & 0x00FF0000) >> 8) | ((num & 0x0000FF00) << 8) | ((num & 0x000000FF) << 24) )
+#define COLOR_RGB(num) ( ((num & 0xFF0000) >> 16) | ((num & 0x00FF00)) | ((num & 0x0000FF) << 16) | (0xFF000000) )
 
  void generateSimpleWorld(RayCastWorld **worldRef, int mapHeight, int mapWidth) {
 	 createWorld(worldRef, mapHeight, mapWidth, 2);
@@ -60,22 +61,23 @@ void generateGratedWorld(RayCastWorld **worldRef, int mapHeight, int mapWidth) {
 	 world->cellSize = 2.0;
 	
 	CellType *borderType = &(world->types[0]);
-		borderType->ceilColor = 0;
-		borderType->bottomWallColor = 112553;
-		borderType->topWallColor = 0;
-		borderType->floorColor = 0;
-		borderType->isTranslucent = 0;
-		borderType->keepCasting = 1;
-		borderType->ceilZ = 4;
-		borderType->floorZ = 3;
-		borderType->isWall = 1;
+    borderType->ceilColor = 0;
+    borderType->bottomWallColor = COLOR_RGB(0x8888bb);
+    borderType->topWallColor = 0;
+    borderType->floorColor = 0;
+    borderType->isTranslucent = 0;
+    borderType->keepCasting = 1;
+    borderType->ceilZ = 4;
+    borderType->floorZ = 3;
+    borderType->isWall = 1;
 	
 	for(int i = 1; i < mapHeight - 1; i++) {
 		CellType *type = &(world->types[i]);
-		type->ceilColor = 121 * i;
-		type->bottomWallColor = 115 * i;
-		type->topWallColor = 15 * i;
-		type->floorColor = 125 * i;
+		//type->ceilColor = 121 * i;
+        type->ceilColor = (i%2==0) ? COLOR_RGB(0xaaaaff) : COLOR_RGB(0x7777cc);
+		type->bottomWallColor = COLOR_RGB(0x555590);
+		type->topWallColor = type->bottomWallColor;
+		type->floorColor = type->ceilColor;
 		type->isTranslucent = 0;
 		type->keepCasting = 1;
 		type->ceilZ = -0.25 * i + 2.25;

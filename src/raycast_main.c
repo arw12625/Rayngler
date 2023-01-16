@@ -171,7 +171,8 @@ void init() {
     initGraphics2D(&g2D, SCREEN_WIDTH, SCREEN_HEIGHT, 0, vertexsource, fragmentsource);
 	
     activateTextureUnit(g2D);
-	initDoublePBO(&dpbo, IMAGE_HEIGHT, IMAGE_WIDTH);
+    //intentionally reversed. Transpose of texture is rendered.
+	initDoublePBO(&dpbo, IMAGE_WIDTH, IMAGE_HEIGHT);
 	
     g2D->textureID = dpbo->textureID;
     
@@ -182,8 +183,10 @@ void glInit(void) {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	
     glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     
 }
 
@@ -225,7 +228,6 @@ void update(double delta) {
 	float camRotSpeed = 0.003 * delta;
 	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 		world->player->heading += camRotSpeed;
-            printf("Delta: %f\n", delta);
 	}
 	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
 		world->player->heading -= camRotSpeed;
@@ -312,7 +314,7 @@ void updatePixels(GLubyte* dst, int size, GLenum format) {
         return;
 	}
 
-    int* ptr = (int*)dst;
+    unsigned int* ptr = (unsigned int*)dst;
 
 	renderWorld(ptr, world, &settings, raycastMemory);
 

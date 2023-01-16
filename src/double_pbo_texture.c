@@ -1,19 +1,9 @@
 #include <stdlib.h>
 
-#include <stdio.h>
-
 #include "double_pbo_texture.h"
 
 const GLenum PBO_PIXEL_FORMAT = GL_RGBA;
 const int PBO_NUM_CHANNELS = 4;
-
-
-void glDebugMsg(unsigned int cc) {
-    GLenum code;
-    while((code = glGetError()) != GL_NO_ERROR) {
-        printf("%d OpenGL error: %d\n", cc, code);
-    }
-}
 
 void initDoublePBO(DoublePBO **dpboRef, int texWidth, int texHeight) {
 	
@@ -36,7 +26,6 @@ void initDoublePBO(DoublePBO **dpboRef, int texWidth, int texHeight) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, dpbo->texWidth, dpbo->texHeight, 0, PBO_PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-    glBindTexture(GL_TEXTURE_2D, 0);
     #ifdef __EMSCRIPTEN__
     // OpenGL ES 2.0, pixel buffers are not supported well
     // So when using Emscripten, we do not use double buffering
@@ -56,7 +45,7 @@ void initDoublePBO(DoublePBO **dpboRef, int texWidth, int texHeight) {
 
 void updateDoublePBO(DoublePBO *dpbo, void (*writeTex)(GLubyte*, int, GLenum)) {
     #ifdef __EMSCRIPTEN__
-	//glBindTexture(GL_TEXTURE_2D, dpbo->textureID);
+	glBindTexture(GL_TEXTURE_2D, dpbo->textureID);
     writeTex(dpbo->pixels, dpbo->dataSize, PBO_PIXEL_FORMAT);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, dpbo->texWidth, dpbo->texHeight, PBO_PIXEL_FORMAT, GL_UNSIGNED_BYTE, (GLvoid*)dpbo->pixels);
     //glBindTexture(GL_TEXTURE_2D, 0);

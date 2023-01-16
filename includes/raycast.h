@@ -11,7 +11,7 @@
 		and the cell is treated like floorZ = +infty ( not implemented yet :)
 */
 typedef struct CellType {
-	int ceilColor, floorColor, bottomWallColor, topWallColor;
+	unsigned int ceilColor, floorColor, bottomWallColor, topWallColor;
 	int isWall, isTranslucent, keepCasting;
 	float ceilZ;
 	float floorZ;
@@ -54,7 +54,7 @@ void updateWorld(float delta, RayCastWorld *world);
 
 void* mallocRaycastMemory(RayCastSettings *settings);
 	
-void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings, void* memory);
+void renderWorld(unsigned int *data, RayCastWorld *world, RayCastSettings *settings, void* memory);
 
 CellType getCellType(RayCastWorld *world, float x, float y);
 #endif

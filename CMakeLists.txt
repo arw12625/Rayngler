@@ -15,7 +15,16 @@ target_include_directories(Raycaster PRIVATE ${INC_DIR})
 
 if(EMSCRIPTEN)
     target_link_options(Raycaster PRIVATE -sUSE_GLFW=3 -s WASM=1 -sMIN_WEBGL_VERSION=2)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html") 
+    add_custom_command(
+        TARGET Raycaster
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${SRC_DIR}/index.html
+        ${EXECUTABLE_OUTPUT_PATH}/index.html
+        DEPENDS ${SRC_DIR}/index.html
+    )
+    
+    # Build html file from emscripten
+    #set(CMAKE_EXECUTABLE_SUFFIX ".html") 
 else()
     set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)

@@ -140,29 +140,27 @@ typedef struct RayCastProjectionData {
 RayCastProjectionData initRayCastProjectionData(Camera *cam, RayCastCell *history, RayCastWorld *world);
 void projectCell(Camera *cam, RayCastingPlaneData *data, RayCastProjectionData *projData, RayCastWorld *world);
 
-void renderHistory(RayCastProjectionData *projData, int *slice, RayCastSettings *settings);
+void renderHistory(RayCastProjectionData *projData, unsigned int *slice, RayCastSettings *settings);
 
 #define TO_SCREEN_ROW(coord, h) ((int)((-fmin(fmax(coord,-1),1) + 1) * h / 2))
 
-void renderWorld(int *data, RayCastWorld *world, RayCastSettings *settings, void* memory) {
+void renderWorld(unsigned int *data, RayCastWorld *world, RayCastSettings *settings, void* memory) {
 	
 	// Clear data to black. Not necessary once screen is entirely redrawn each frame
 	
-	int *tmp = data;
-	for(int i = 0; i < settings->screenHeight; i++) {
-		for(int j = 0; j < settings->screenWidth; j++) {
-			*tmp = 0;
-			tmp++;
+	// Vertical slice of the image to be rendered
+	unsigned int *slice = data;
+	for(int i = 0; i < settings->screenWidth; i++) {
+		for(int j = 0; j < settings->screenHeight; j++) {
+			*slice = 0;
+			slice++;
 		}
 	}
 	
 	Player *player = world->player;
 	Camera cam = initCamera(player, settings);
 	
-	// Vertical slice of the image to be rendered
-	int *slice;
-	
-    RayCastCell *history = (RayCastCell*)memory;
+	RayCastCell *history = (RayCastCell*)memory;
 	//RayCastCell *history = malloc(sizeof(RayCastCell) * settings->castLimit);
 	
 	// Iterate over all vertical slices of the screen
@@ -396,7 +394,7 @@ void projectCell(Camera *cam, RayCastingPlaneData *planeData, RayCastProjectionD
 }
 
 
-void renderHistory(RayCastProjectionData *projData, int *slice, RayCastSettings *settings) {
+void renderHistory(RayCastProjectionData *projData, unsigned int *slice, RayCastSettings *settings) {
 	int h = settings->screenHeight;
 	for(int i = projData->historyLen - 1; i >= 0; i--) {
 		RayCastCell inter = projData->history[i];
