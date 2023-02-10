@@ -26,10 +26,18 @@ void glInit();
 const char vertShaderSource[] = "res/simple2D.vert";
 const char fragShaderSource[] = "res/simple2D.frag";
 
-const int    SCREEN_WIDTH    = 1024;
-const int    SCREEN_HEIGHT   = 768;
-const int    IMAGE_WIDTH     = 1024/2;
-const int    IMAGE_HEIGHT    = 1024/2;
+#ifndef SCREEN_WIDTH
+#define SCREEN_WIDTH 1024
+#endif
+#ifndef SCREEN_HEIGHT
+#define SCREEN_HEIGHT 768
+#endif
+#ifndef IMAGE_WIDTH
+#define IMAGE_WIDTH 1024/2
+#endif
+#ifndef IMAGE_HEIGHT
+#define IMAGE_HEIGHT 1024/2
+#endif
 
 const float MIN_DELTA = 14;
 

@@ -2,12 +2,21 @@ cmake_minimum_required(VERSION 3.3)
 
 project(Raycaster)
 
+if(EMSCRIPTEN)
+set(EXECUTABLE_OUTPUT_PATH "bin/js")
+set(HTML_OUTPUT_PATH "bin")
+else()
 set(EXECUTABLE_OUTPUT_PATH "bin")
+endif()
 
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/includes")
 set(RES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries")
+
+set(SCREEN_WIDTH "1024" CACHE STRING "Width of the screen/window to create.")
+set(SCREEN_HEIGHT "768" CACHE STRING "Height of the screen/window to create.")
+set(CMAKE_C_FLAGS "-DSCREEN_WIDTH=${SCREEN_WIDTH} -DSCREEN_HEIGHT=${SCREEN_HEIGHT}")
 
 add_executable(Raycaster src/raycast_main.c ${SRC_DIR}/raycast.c ${INC_DIR}/raycast.h ${SRC_DIR}/mapGen.c ${INC_DIR}/mapGen.h ${SRC_DIR}/vecMath.c ${INC_DIR}/vecMath.h ${SRC_DIR}/double_pbo_texture.c ${INC_DIR}/double_pbo_texture.h ${SRC_DIR}/graphics_2d.c ${INC_DIR}/graphics_2d.h)
 
@@ -19,7 +28,7 @@ if(EMSCRIPTEN)
         TARGET Raycaster
         COMMAND ${CMAKE_COMMAND} -E copy
         ${SRC_DIR}/index.html
-        ${EXECUTABLE_OUTPUT_PATH}/index.html
+        ${HTML_OUTPUT_PATH}/index.html
         DEPENDS ${SRC_DIR}/index.html
     )
     
